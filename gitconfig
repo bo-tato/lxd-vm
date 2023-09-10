@@ -1,0 +1,8 @@
+[user]
+	email = 122528427+bo-tato@users.noreply.github.com
+	name = bo-tato
+[init]
+	defaultBranch = main
+
+[url "git@github.com:"]
+        pushInsteadOf = https://github.com/

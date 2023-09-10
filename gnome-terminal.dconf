@@ -1,0 +1,11 @@
+[/]
+default-show-menubar=false
+
+[keybindings]
+new-window='<Shift><Meta>Return'
+
+[profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9]
+custom-command='fish'
+preserve-working-directory='always'
+scrollbar-policy='never'
+use-custom-command=true

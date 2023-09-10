@@ -1,0 +1,3 @@
+;(declaim (optimize (debug 3) (safety 3)))
+;(setf *read-default-float-format* 'double-float)
+(setf *print-case* :downcase)

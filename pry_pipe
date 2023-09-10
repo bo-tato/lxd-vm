@@ -1,0 +1,79 @@
+#!/usr/bin/env ruby
+
+require 'pry'
+require 'readline'
+
+tty = File.open('/dev/tty', 'r+')
+Readline.input = tty
+Readline.output = tty
+
+pry = Pry.new
+
+input = STDIN.read
+mode = File.basename $PROGRAM_NAME
+case mode
+when 'rl'
+  input = input.split("\n")
+when 'rj'
+  require 'json'
+  require 'hashie'
+  include Hashie::Extensions::DeepFind
+  include Hashie::Extensions::DeepLocate
+  input = Hashie::Mash.new(JSON.parse(input))
+when 'rh'
+  require 'mechanize'
+  require 'webrick'
+  require 'json'
+  req = WEBrick::HTTPRequest.new(WEBrick::Config::HTTP)
+  req.parse(StringIO.new(input))
+  req.request_uri.scheme = 'https'
+  # need to convert to string, otherwise we get an ssl error
+  # as it sends an http request as it is still type URI::HTTP
+  uri = req.request_uri.to_s
+
+  # in this mode we set 3 variables:
+  # m: Mechanize agent with cookies set as the input request
+  # i: the input request
+  # r: response of the input request as a Mechanize::Page
+  m = Mechanize.new
+  pry.add_sticky_local(:m) { m }
+  response = m.agent.fetch(uri,
+                           req.request_method,
+                           req.header,
+                           [req.body],
+                           Mechanize::Page.new)
+  pry.add_sticky_local(:r) { response }
+  m.request_headers = req.header.except('content-type', 'content-length')
+  input = req
+end
+
+pp input
+pry.add_sticky_local(:i) { input }
+out = pry.sticky_locals[:_out_]
+
+pry.commands.command 'copy', 'Save last result to clipboard' do
+  open('|xclip', 'w') do |input|
+    input.write(out[-1])
+  end
+end
+
+pry.commands.command 'save', "Save last result to file, \
+generating a temp file if no name provied" do |name|
+  File.open(name || Tempfile.new, 'w') do |file|
+    file.write(out[-1])
+    puts "Saved to #{file.path}" unless name
+  end
+end
+
+pry.repl
+
+unless STDOUT.tty?
+  out = out[-1]
+  case mode
+  when 'rl'
+    out = out.join("\n") + "\n" if out.respond_to?(:join)
+  when 'rj'
+    out = JSON.pretty_generate(out)
+  end
+  STDOUT.write(out)
+end

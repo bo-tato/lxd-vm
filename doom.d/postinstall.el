@@ -1,0 +1,6 @@
+(require 'doom-start)
+(dash-docs-install-docset "Python_3")
+(dash-docs-install-docset "Ruby")
+(dash-docs-install-docset "Clojure")
+(dash-docs-install-docset "Common_Lisp")
+(nerd-icons-install-fonts t)
